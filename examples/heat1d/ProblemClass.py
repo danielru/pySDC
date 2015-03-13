@@ -2,9 +2,11 @@ from __future__ import division
 import numpy as np
 import scipy.sparse as sp
 import scipy.sparse.linalg as LA
+import random
 
 from pySDC.Problem import ptype
 from pySDC.datatype_classes.mesh import mesh, rhs_imex_mesh
+from bitflip import bitflip
 
 class heat1d(ptype):
     """
@@ -13,6 +15,7 @@ class heat1d(ptype):
     Attributes:
         A: second-order FD discretization of the 1D laplace operator
         dx: distance between two spatial nodes
+        have_flipped
     """
 
     def __init__(self, cparams, dtype_u, dtype_f):
@@ -40,6 +43,7 @@ class heat1d(ptype):
         self.dx = 1/(self.nvars + 1)
         self.A = self.__get_A(self.nvars,self.nu,self.dx)
 
+        self.have_flipped = False
 
     def __get_A(self,N,nu,dx):
         """
@@ -75,6 +79,16 @@ class heat1d(ptype):
 
         me = mesh(self.nvars)
         me.values = LA.spsolve(sp.eye(self.nvars)-factor*self.A,rhs.values)
+        
+        if not self.have_flipped:
+          r = random.random()
+          if (r<0.1):
+            posi = random.randint(0,self.nvars)
+            print me.values[posi]
+            me.values[posi] = bitflip(me.values[posi], 0)
+            self.have_flipped = True
+            print me.values[posi]
+        
         return me
 
 
@@ -109,6 +123,7 @@ class heat1d(ptype):
 
         fimpl = mesh(self.nvars)
         fimpl.values = self.A.dot(u.values)
+
         return fimpl
 
 

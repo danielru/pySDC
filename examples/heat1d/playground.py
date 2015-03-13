@@ -16,19 +16,19 @@ if __name__ == "__main__":
     # set global logger (remove this if you do not want the output at all)
     logger = Log.setup_custom_logger('root')
 
-    num_procs = 2
+    num_procs = 1
 
     # This comes as read-in for the level class
     lparams = {}
     lparams['restol'] = 3E-12
 
     sparams = {}
-    sparams['maxiter'] = 10
+    sparams['maxiter'] = 15
 
     # This comes as read-in for the problem class
     pparams = {}
     pparams['nu'] = 0.1
-    pparams['nvars'] = [255,127]
+    pparams['nvars'] = [255]
 
     # This comes as read-in for the transfer operations
     tparams = {}
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     # setup parameters "in time"
     t0 = 0
     dt = 0.125
-    Tend = 2*dt
+    Tend = dt
 
     # get initial values on finest level
     P = MS[0].levels[0].prob
