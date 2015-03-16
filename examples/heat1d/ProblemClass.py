@@ -44,6 +44,7 @@ class heat1d(ptype):
         self.A = self.__get_A(self.nvars,self.nu,self.dx)
 
         self.have_flipped = False
+        random.seed()
 
     def __get_A(self,N,nu,dx):
         """
@@ -79,7 +80,7 @@ class heat1d(ptype):
 
         me = mesh(self.nvars)
         me.values = LA.spsolve(sp.eye(self.nvars)-factor*self.A,rhs.values)
-        
+      
         if not self.have_flipped:
           r = random.random()
           if (r<0.1):

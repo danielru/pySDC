@@ -16,19 +16,19 @@ if __name__ == "__main__":
     # set global logger (remove this if you do not want the output at all)
     logger = Log.setup_custom_logger('root')
 
-    num_procs = 1
+    num_procs = 2
 
     # This comes as read-in for the level class
     lparams = {}
     lparams['restol'] = 3E-12
 
     sparams = {}
-    sparams['maxiter'] = 15
+    sparams['maxiter'] = 50
 
     # This comes as read-in for the problem class
     pparams = {}
     pparams['nu'] = 0.1
-    pparams['nvars'] = [255]
+    pparams['nvars'] = [255, 127]
 
     # This comes as read-in for the transfer operations
     tparams = {}
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     description['problem_params'] = pparams
     description['dtype_u'] = mesh
     description['dtype_f'] = rhs_imex_mesh
-    description['collocation_class'] = collclass.CollGaussLobatto
+    description['collocation_class'] = collclass.CollGaussLegendre
     description['num_nodes'] = 3
     description['sweeper_class'] = imex_1st_order
     description['level_params'] = lparams
