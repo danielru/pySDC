@@ -37,13 +37,36 @@ class Callback(object):
 
 class boussinesq_2d_imex(ptype):
     """
-    Example implementing the forced 1D heat equation with Dirichlet-0 BC in [0,1]
+    TEXT
 
     Attributes:
-      solver: Sharpclaw solver
-      state:  Sharclaw state
-      domain: Sharpclaw domain
+      A: TEXT
+      B: TEXT
+      C: TEXT
     """
+    @staticmethod
+    def buildMatrix(cparams):
+        assert 'nvars' in cparams
+        assert 'c_s' in cparams
+        assert 'u_adv' in cparams
+        assert 'Nfreq' in cparams
+        assert 'x_bounds' in cparams
+        assert 'z_bounds' in cparams
+        assert 'order_upw' in cparams
+        assert 'order' in cparams
+        
+        N = [ cparams['nvars'][1], cparams['nvars'][2] ]
+        bc_hor = [ ['periodic', 'periodic'] , ['periodic', 'periodic'],   ['periodic', 'periodic'] , ['periodic', 'periodic'] ]
+        bc_ver = [ ['neumann', 'neumann'] ,   ['dirichlet', 'dirichlet'], ['dirichlet', 'dirichlet'], ['neumann', 'neumann'] ]
+        xx, zz, h = get2DMesh(N, x_bounds, z_bounds, bc_hor[0], bc_ver[0])
+        cparams['xx'] = xx
+        cparams['zz'] = zz
+        cparams['h']  = h
+        cparams['N'] = N
+        cparams['Id'], cparams['M'] = getBoussinesq2DMatrix(self.N, self.h, self.bc_hor, self.bc_ver, self.c_s, self.Nfreq, self.order)
+        cparams['D_upwind']   = getBoussinesq2DUpwindMatrix( self.N, self.h[0], self.u_adv , self.order_upw)
+
+        return cparams
 
     def __init__(self, cparams, dtype_u, dtype_f):
         """
@@ -67,23 +90,14 @@ class boussinesq_2d_imex(ptype):
         assert 'gmres_maxiter' in cparams
         assert 'gmres_restart' in cparams
         assert 'gmres_tol' in cparams
-        
+      
+             
         # add parameters as attributes for further reference
         for k,v in cparams.items():
             setattr(self,k,v)
         
         # invoke super init, passing number of dofs, dtype_u and dtype_f
-        super(boussinesq_2d_imex,self).__init__(self.nvars,dtype_u,dtype_f)
-                
-        self.N     = [ self.nvars[1],  self.nvars[2] ]
-        
-        self.bc_hor = [ ['periodic', 'periodic'] , ['periodic', 'periodic'],   ['periodic', 'periodic'] , ['periodic', 'periodic'] ]
-        self.bc_ver = [ ['neumann', 'neumann'] ,   ['dirichlet', 'dirichlet'], ['dirichlet', 'dirichlet'], ['neumann', 'neumann'] ]
-
-        self.xx, self.zz, self.h = get2DMesh(self.N, self.x_bounds, self.z_bounds, self.bc_hor[0], self.bc_ver[0])
-       
-        self.Id, self.M = getBoussinesq2DMatrix(self.N, self.h, self.bc_hor, self.bc_ver, self.c_s, self.Nfreq, self.order)
-        self.D_upwind   = getBoussinesq2DUpwindMatrix( self.N, self.h[0], self.u_adv , self.order_upw)
+        super(boussinesq_2d_imex,self).__init__(self.nvars,dtype_u,dtype_f)                
     
         self.logger = logging()
     
