@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from pySDC.implementations.collocation_classes.gauss_radau_right import CollGaussRadau_Right
 from pySDC.implementations.datatype_classes.complex_mesh import mesh
 from pySDC.implementations.problem_classes.AdvectionDiffusionSingleMode import advection_diffusion_spectral
+from pySDC.implementations.problem_classes.DiffusionSingleMode import diffusion_spectral
 from pySDC.implementations.sweeper_classes.generic_implicit import generic_implicit
 from pySDC.implementations.controller_classes.allinclusive_classic_nonMPI import allinclusive_classic_nonMPI
 from pySDC.helpers.stats_helper import filter_stats, sort_stats, get_list_of_types
@@ -50,7 +51,7 @@ def main():
 
     # Fill description dictionary for easy hierarchy creation
     description = dict()
-    description['problem_class'] = advection_diffusion_spectral
+    description['problem_class'] = [advection_diffusion_spectral, diffusion_spectral]
     description['problem_params'] = problem_params
     description['dtype_u'] = mesh
     description['dtype_f'] = mesh
