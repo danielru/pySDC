@@ -9,7 +9,16 @@ from pySDC.core.Errors import ParameterError
 # noinspection PyUnusedLocal
 class advection_diffusion_spectral(ptype):
     """
-    Example implementing the initial value problem coming from the advection-diffusion equation for a single mode
+    Example implementing the initial value problem coming from the advection-diffusion equation for a single mode.
+    Fourier transformation of the advection-diffusion equation u_t + U u_x = nu u_xx
+    yields the following ODE for every mode:
+    
+      U_t = -( U*i*k + nu*k^2 ) U
+      
+    with solution
+    
+      U(t) = exp(-U*i*k)*exp(-nu*k^2*t)
+      
     """
 
     def __init__(self, problem_params, dtype_u, dtype_f):
@@ -57,8 +66,8 @@ class advection_diffusion_spectral(ptype):
             RHS, 2 components
         """
 
-        x1 = u.values[0]
-        f = self.dtype_f(self.init)
+        x1          = u.values[0]
+        f           = self.dtype_f(self.init)
         f.values[0] = -(self.params.U*1j*self.params.kappa + self.params.nu*self.params.kappa**2)*x1
         return f
 
