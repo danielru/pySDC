@@ -40,7 +40,7 @@ class advection_diffusion_spectral(ptype):
 
         # invoke super init, passing dtype_u and dtype_f, plus setting number of elements to 1
         super(advection_diffusion_spectral, self).__init__(1, dtype_u, dtype_f, problem_params)
-        
+            
     def u_exact(self, t):
         """
         Routine for the exact solution
