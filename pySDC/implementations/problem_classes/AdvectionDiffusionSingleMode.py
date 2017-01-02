@@ -32,7 +32,7 @@ class advection_diffusion_spectral(ptype):
         """
 
         # these parameters will be used later, so assert their existence
-        essential_keys = ['kappa', 'U', 'nu']
+        essential_keys = ['kappa', 'U', 'nu', 'dx']
         for key in essential_keys:
             if key not in problem_params:
                 msg = 'need %s to instantiate problem, only got %s' % (key, str(problem_params.keys()))
@@ -40,7 +40,11 @@ class advection_diffusion_spectral(ptype):
 
         # invoke super init, passing dtype_u and dtype_f, plus setting number of elements to 1
         super(advection_diffusion_spectral, self).__init__(1, dtype_u, dtype_f, problem_params)
-            
+    
+        if dx==0:
+          self.delta = -self.params.U*1j*self.params.kappa - self.params.nu*self.params.kappa**2
+        else:
+        
     def u_exact(self, t):
         """
         Routine for the exact solution
@@ -68,7 +72,7 @@ class advection_diffusion_spectral(ptype):
 
         x1          = u.values[0]
         f           = self.dtype_f(self.init)
-        f.values[0] = -(self.params.U*1j*self.params.kappa + self.params.nu*self.params.kappa**2)*x1
+        f.values[0] = self.delta*x1
         return f
 
     def solve_system(self, rhs, dt, u0, t):
@@ -88,6 +92,6 @@ class advection_diffusion_spectral(ptype):
         # create new mesh object from u0 and set initial values for iteration
         u = self.dtype_u(u0)
         x1 = rhs.values[0]
-        u.values[0] = x1/(1.0 + dt*(self.params.U*1j*self.params.kappa + self.params.nu*self.params.kappa**2))
+        u.values[0] = x1/(1.0 - dt*self.delta)
 
         return u

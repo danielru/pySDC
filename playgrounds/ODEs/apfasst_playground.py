@@ -29,8 +29,8 @@ def main():
     # initialize problem parameters
     problem_params = dict()
     problem_params['kappa'] = [1.0, 1.0]
-    problem_params['U']     = [0.8, 0.0]
-    problem_params['nu']    = [0.1, 0.1]
+    problem_params['U']     = [1.0, 1.0] # advection is being taken care of by transfer operators
+    problem_params['nu']    = [0.0, 0.0]
 
     # initialize space transfer parameters
     space_transfer_params = dict()

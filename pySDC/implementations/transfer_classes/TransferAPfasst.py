@@ -14,7 +14,7 @@ class apfasst_transfer(space_transfer):
     
       u_t + U u_x = nu u_xx
       
-    Interpolation means multiplication with exp(-U*i*k) whereas restriction means multiplication with exp(U*i*k).
+    Interpolation means multiplication with exp(U*i*k*t) whereas restriction means multiplication with exp(-U*i*k*t).
     
     """
 
@@ -43,9 +43,9 @@ class apfasst_transfer(space_transfer):
         Args:
             F: the fine level data (easier to access than via the fine attribute)
         """
-        if isinstance(F, mesh):
+        if isinstance(F, mesh):          
             G = mesh(F)
-            G.values *= np.exp(-self.params.U*1j*self.params.kappa)
+            #G.values *= np.exp(-self.params.U*1j*self.params.kappa)
         #elif isinstance(F, rhs_imex_mesh):  ... for now, we only use a fully implicit sweeper
         #    G = rhs_imex_mesh(F)
         else:
@@ -61,7 +61,7 @@ class apfasst_transfer(space_transfer):
         """
         if isinstance(G, mesh):
             F = mesh(G)
-            F.values *= np.exp(self.params.U*1j*self.params.kappa)
+            #F.values *= np.exp(self.params.U*1j*self.params.kappa)
         #elif isinstance(G, rhs_imex_mesh): ... see above
         #    F = rhs_imex_mesh(G)
         else:
