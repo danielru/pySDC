@@ -38,13 +38,17 @@ class advection_diffusion_spectral(ptype):
                 msg = 'need %s to instantiate problem, only got %s' % (key, str(problem_params.keys()))
                 raise ParameterError(msg)
 
+        problem_params['nvars'] = 1
         # invoke super init, passing dtype_u and dtype_f, plus setting number of elements to 1
         super(advection_diffusion_spectral, self).__init__(1, dtype_u, dtype_f, problem_params)
     
-        if dx==0:
+        if self.params.dx==0:
+          # exact continuous spatial deriative operators for both advection and diffusion
           self.delta = -self.params.U*1j*self.params.kappa - self.params.nu*self.params.kappa**2
         else:
-        
+          # first order upwind stencil for advection, continuous operator for diffusion
+          self.delta = -self.params*U*(1.0 - np.exp(-1j*self.params.kappa*self.params.dx))/self.params.dx - self.params.nu*self.params.kappa**2
+
     def u_exact(self, t):
         """
         Routine for the exact solution
