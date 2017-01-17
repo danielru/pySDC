@@ -16,10 +16,19 @@ def main():
     """
     Advection-diffusion equation for a single mode
     """
+    
+    
+    # set time parameters
+    t0   = 0.0
+    Tend = 1.01
+    
+    # set number of processors
+    nproc = 2
+    
     # initialize level parameters
     level_params = dict()
     level_params['restol'] = 1E-8
-    level_params['dt']     = 1.0
+    level_params['dt']     = (Tend - t0)/float(nproc)
 
     # initialize sweeper parameters
     sweeper_params = dict()
@@ -69,11 +78,8 @@ def main():
     description['space_transfer_params'] = space_transfer_params  # pass paramters for spatial transfer
 
     # instantiate the controller
-    controller = allinclusive_classic_nonMPI(num_procs=2, controller_params=controller_params, description=description)
+    controller = allinclusive_classic_nonMPI(num_procs=nproc, controller_params=controller_params, description=description)
 
-    # set time parameters
-    t0   = 0.0
-    Tend = 1.01
 
     # get initial values on finest level
     P = controller.MS[0].levels[0].prob

@@ -99,6 +99,10 @@ class apfasst_transfer(base_transfer):
         for ttt in F.sweep.coll.nodes:
           print "F.sweep.coll.nodes: %5.3f" % ttt
         print "F.status.time: %5.3f" % F.status.time
+        print "G.dt: %5.3f" % G.dt
+        for ttt in G.sweep.coll.nodes:
+          print "G.sweep.coll.nodes: %5.3f" % ttt
+        print "G.status.time: %5.3f" % G.status.time
         print "\n"
         
         PG = G.prob
