@@ -5,8 +5,9 @@ from pySDC.implementations.datatype_classes.complex_mesh import mesh
 from pySDC.implementations.problem_classes.AdvectionDiffusionSingleMode import advection_diffusion_spectral
 from pySDC.implementations.sweeper_classes.generic_implicit import generic_implicit
 from pySDC.implementations.controller_classes.allinclusive_classic_nonMPI import allinclusive_classic_nonMPI
+from pySDC.implementations.transfer_classes.TransferMesh import mesh_to_mesh
 from pySDC.helpers.stats_helper import filter_stats, sort_stats, get_list_of_types
-from pySDC.implementations.transfer_classes.TransferAPfasst import apfasst_transfer
+from TransferAPfasst import apfasst_transfer
 
 #from playgrounds.ODEs.trajectory_HookClass import trajectories
 import numpy as np
@@ -23,7 +24,7 @@ def main():
     # initialize sweeper parameters
     sweeper_params = dict()
     sweeper_params['collocation_class'] = CollGaussRadau_Right
-    sweeper_params['num_nodes'] = [5, 2]
+    sweeper_params['num_nodes'] = [5, 5]
     sweeper_params['QI'] = 'IE'
 
     # initialize problem parameters
@@ -31,16 +32,16 @@ def main():
     problem_params['kappa'] = [1.0, 1.0]
     problem_params['U']     = [1.0, 1.0] # advection is being taken care of by transfer operators
     problem_params['nu']    = [0.0, 0.0]
+    problem_params['dx']    = [0.0, 0.0]
 
     # initialize space transfer parameters
-    space_transfer_params = dict()
-    space_transfer_params['U']     = problem_params['U'][0] ## Can may be access problem_params['U'] directly in transfer class?
-    space_transfer_params['kappa'] = problem_params['kappa'][0] ## see above
-
+    space_transfer_params = dict() ### Won't be used
+    space_transfer_params['rorder'] = 1
+    space_transfer_params['iorder'] = 1
     
     # initialize step parameters
     step_params = dict()
-    step_params['maxiter'] = 15
+    step_params['maxiter'] = 2
 
     # initialize controller parameters
     controller_params = dict()
@@ -58,15 +59,21 @@ def main():
     description['sweeper_params'] = sweeper_params
     description['level_params'] = level_params
     description['step_params'] = step_params
-    description['space_transfer_class'] = apfasst_transfer  # pass spatial transfer class
+
+    apfasst_transfer_params = dict()
+
+    description['base_transfer_class']  = apfasst_transfer
+    description['base_transfer_params'] = apfasst_transfer_params
+    
+    description['space_transfer_class']  = mesh_to_mesh  # pass spatial transfer class
     description['space_transfer_params'] = space_transfer_params  # pass paramters for spatial transfer
 
     # instantiate the controller
-    controller = allinclusive_classic_nonMPI(num_procs=16, controller_params=controller_params, description=description)
+    controller = allinclusive_classic_nonMPI(num_procs=2, controller_params=controller_params, description=description)
 
     # set time parameters
     t0   = 0.0
-    Tend = 16.0
+    Tend = 1.01
 
     # get initial values on finest level
     P = controller.MS[0].levels[0].prob
