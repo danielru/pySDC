@@ -115,9 +115,10 @@ class apfasst_transfer(base_transfer):
             raise UnlockError('fine level is still locked, cannot use data from there')
 
         # restrict fine values in space
-        tmp_u = [self.space_transfer_restrict(F.u[0])]
+        ### TODO: IS THIS CORRECT? Check https://github.com/Parallel-in-Time/pySDC/issues/93
+        tmp_u = [self.space_transfer_restrict(F.u[0], F.status.time)]
         for m in range(1, SF.coll.num_nodes + 1):
-            tmp_u.append(self.space_transfer_restrict(F.u[m]))
+            tmp_u.append(self.space_transfer_restrict(F.u[m], F.sweep.coll.nodes[m-1]))
 
         # restrict collocation values
         G.u[0] = tmp_u[0]
@@ -140,7 +141,7 @@ class apfasst_transfer(base_transfer):
         # restrict fine level tau correction part in space
         tmp_tau = []
         for m in range(0, SF.coll.num_nodes):
-            tmp_tau.append(self.space_transfer_restrict(tauF[m]))
+            tmp_tau.append(self.space_transfer_restrict(tauF[m], F.sweep.coll.nodes[m]))
 
         # restrict fine level tau correction part in collocation
         tauFG = [tmp_tau[0]]
@@ -157,7 +158,7 @@ class apfasst_transfer(base_transfer):
             # restrict possible tau correction from fine in space
             tmp_tau = []
             for m in range(0, SF.coll.num_nodes):
-                tmp_tau.append(self.space_transfer_restrict(F.tau[m]))
+                tmp_tau.append(self.space_transfer_restrict(F.tau[m], F.sweep.coll.nodes[m]))
 
             # restrict possible tau correction from fine in collocation
             for n in range(0, SG.coll.num_nodes):
@@ -177,7 +178,8 @@ class apfasst_transfer(base_transfer):
 
         return None
 
-    def space_transfer_restrict(self, F):
+    def space_transfer_restrict(self, F, t):
+      print "space_transfer_restrict at time: %5.3f" % t
       return F
     
     def prolong(self):
@@ -206,7 +208,7 @@ class apfasst_transfer(base_transfer):
         # we need to update u0 here for the predictor step, since here the new values for the fine sweep are not
         # received from the previous processor but interpolated from the coarse level.
         # need to restrict F.u[0] again here, since it might have changed in PFASST
-        G.uold[0] = self.space_transfer_restrict(F.u[0])
+        G.uold[0] = self.space_transfer_restrict(F.u[0], F.status.time)
 
         # interpolate values in space first
         tmp_u = [self.space_transfer_prolong(G.u[0] - G.uold[0])]
