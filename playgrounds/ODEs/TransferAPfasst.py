@@ -105,6 +105,8 @@ class apfasst_transfer(base_transfer):
         print "G.status.time: %5.3f" % G.status.time
         print "\n"
         
+        ### TODO: transfer node times from unit interval to [F.status.time, F.status.time + F.dt]
+        
         PG = G.prob
 
         SF = F.sweep

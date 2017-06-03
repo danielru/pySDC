@@ -19,11 +19,11 @@ def main():
     
     
     # set time parameters
-    t0   = 0.0
-    Tend = 1.01
+    t0   = 0.666
+    Tend = 1.0
     
     # set number of processors
-    nproc = 2
+    nproc = 1
     
     # initialize level parameters
     level_params = dict()
@@ -33,7 +33,7 @@ def main():
     # initialize sweeper parameters
     sweeper_params = dict()
     sweeper_params['collocation_class'] = CollGaussRadau_Right
-    sweeper_params['num_nodes'] = [5, 5]
+    sweeper_params['num_nodes'] = [2, 2]
     sweeper_params['QI'] = 'IE'
 
     # initialize problem parameters
@@ -50,7 +50,7 @@ def main():
     
     # initialize step parameters
     step_params = dict()
-    step_params['maxiter'] = 2
+    step_params['maxiter'] = 1
 
     # initialize controller parameters
     controller_params = dict()
@@ -90,7 +90,7 @@ def main():
     uend, stats = controller.run(u0=uinit, t0=t0, Tend=Tend)
 
     # filter statistics by type (number of iterations)
-    filtered_stats = filter_stats(stats, time=15.0, type='residual_post_iteration')
+    filtered_stats = filter_stats(stats, time=Tend, type='residual_post_iteration')
     
     # sort and convert stats to list, sorted by iteration numbers
     residuals = sort_stats(filtered_stats, sortby='iter')
