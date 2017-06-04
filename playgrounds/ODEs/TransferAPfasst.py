@@ -110,6 +110,12 @@ class apfasst_transfer(base_transfer):
         for ttt in coarse_nodes_mapped:
           print "Coarse nodes: %5.3f" % ttt
 
+        if np.size(fine_nodes_mapped)==np.size(coarse_nodes_mapped):
+          if not np.allclose(fine_nodes_mapped,coarse_nodes_mapped, rtol=1e-10):
+            raise NotImplementedError("The APFASST transfer class currently only works if the coarse and fine quadrature nodes are identical")
+        else:
+          raise NotImplementedError("The APFASST transfer class currently only works if the coarse and fine quadrature nodes are identical")
+
         print "\n"
         
         PG = G.prob
