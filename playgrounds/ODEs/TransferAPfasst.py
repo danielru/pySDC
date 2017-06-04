@@ -95,17 +95,22 @@ class apfasst_transfer(base_transfer):
         F = self.fine
         G = self.coarse
 
-        print "F.dt: %5.3f" % F.dt
-        for ttt in F.sweep.coll.nodes:
-          print "F.sweep.coll.nodes: %5.3f" % ttt
-        print "F.status.time: %5.3f" % F.status.time
-        print "G.dt: %5.3f" % G.dt
-        for ttt in G.sweep.coll.nodes:
-          print "G.sweep.coll.nodes: %5.3f" % ttt
-        print "G.status.time: %5.3f" % G.status.time
-        print "\n"
+        # Make sure that coarse and fine time step align
+        assert np.isclose(F.status.time, G.status.time, rtol = 1e-10), "Coarse and fine time step do not have the same initial time"
+        assert np.isclose(F.dt, G.dt, rtol = 1e-10), "Coarse and fine time step dt are different"
         
-        ### TODO: transfer node times from unit interval to [F.status.time, F.status.time + F.dt]
+        print "Beginning of time step: %5.3f" % F.status.time
+        print "Length of time step:    %5.3f" % F.dt
+        
+        fine_nodes_mapped = F.status.time + F.dt*F.sweep.coll.nodes
+        for ttt in fine_nodes_mapped:
+          print "Fine nodes: %5.3f" % ttt
+            
+        coarse_nodes_mapped = G.status.time + G.dt*G.sweep.coll.nodes
+        for ttt in coarse_nodes_mapped:
+          print "Coarse nodes: %5.3f" % ttt
+
+        print "\n"
         
         PG = G.prob
 
@@ -117,10 +122,9 @@ class apfasst_transfer(base_transfer):
             raise UnlockError('fine level is still locked, cannot use data from there')
 
         # restrict fine values in space
-        ### TODO: IS THIS CORRECT? Check https://github.com/Parallel-in-Time/pySDC/issues/93
         tmp_u = [self.space_transfer_restrict(F.u[0], F.status.time)]
         for m in range(1, SF.coll.num_nodes + 1):
-            tmp_u.append(self.space_transfer_restrict(F.u[m], F.sweep.coll.nodes[m-1]))
+            tmp_u.append(self.space_transfer_restrict(F.u[m], fine_nodes_mapped[m-1]))
 
         # restrict collocation values
         G.u[0] = tmp_u[0]
@@ -143,7 +147,7 @@ class apfasst_transfer(base_transfer):
         # restrict fine level tau correction part in space
         tmp_tau = []
         for m in range(0, SF.coll.num_nodes):
-            tmp_tau.append(self.space_transfer_restrict(tauF[m], F.sweep.coll.nodes[m]))
+            tmp_tau.append(self.space_transfer_restrict(tauF[m], fine_nodes_mapped[m]))
 
         # restrict fine level tau correction part in collocation
         tauFG = [tmp_tau[0]]
@@ -160,7 +164,7 @@ class apfasst_transfer(base_transfer):
             # restrict possible tau correction from fine in space
             tmp_tau = []
             for m in range(0, SF.coll.num_nodes):
-                tmp_tau.append(self.space_transfer_restrict(F.tau[m], F.sweep.coll.nodes[m]))
+                tmp_tau.append(self.space_transfer_restrict(F.tau[m], fine_nodes_mapped[m]))
 
             # restrict possible tau correction from fine in collocation
             for n in range(0, SG.coll.num_nodes):

@@ -19,8 +19,8 @@ def main():
     
     
     # set time parameters
-    t0   = 0.666
-    Tend = 1.0
+    t0   = 0.0
+    Tend = 0.5
     
     # set number of processors
     nproc = 1
