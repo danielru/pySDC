@@ -210,6 +210,19 @@ class apfasst_transfer(base_transfer):
 
         SF = F.sweep
         SG = G.sweep
+        
+        # Make sure that coarse and fine time step align
+        assert np.isclose(F.status.time, G.status.time, rtol = 1e-10), "Coarse and fine time step do not have the same initial time"
+        assert np.isclose(F.dt, G.dt, rtol = 1e-10), "Coarse and fine time step dt are different"
+        
+        fine_nodes_mapped = F.status.time + F.dt*F.sweep.coll.nodes
+        coarse_nodes_mapped = G.status.time + G.dt*G.sweep.coll.nodes
+
+        if np.size(fine_nodes_mapped)==np.size(coarse_nodes_mapped):
+          if not np.allclose(fine_nodes_mapped,coarse_nodes_mapped, rtol=1e-10):
+            raise NotImplementedError("The APFASST transfer class currently only works if the coarse and fine quadrature nodes are identical")
+        else:
+          raise NotImplementedError("The APFASST transfer class currently only works if the coarse and fine quadrature nodes are identical")
 
         # only of the level is unlocked at least by prediction or restriction
         if not G.status.unlocked:
@@ -223,9 +236,9 @@ class apfasst_transfer(base_transfer):
         G.uold[0] = self.space_transfer_restrict(F.u[0], F.status.time)
 
         # interpolate values in space first
-        tmp_u = [self.space_transfer_prolong(G.u[0] - G.uold[0])]
+        tmp_u = [self.space_transfer_prolong(G.u[0] - G.uold[0], G.status.time)]
         for m in range(1, SG.coll.num_nodes + 1):
-            tmp_u.append(self.space_transfer_prolong(G.u[m] - G.uold[m]))
+            tmp_u.append(self.space_transfer_prolong(G.u[m] - G.uold[m], coarse_nodes_mapped[m-1]))
 
         # interpolate values in collocation
         F.u[0] += tmp_u[0]
@@ -240,7 +253,8 @@ class apfasst_transfer(base_transfer):
 
         return None
 
-    def space_transfer_prolong(self, G):
+    def space_transfer_prolong(self, G, t):
+      print "space_transfer_prolong at time: %5.3f" % t
       return G
     
     def prolong_f(self):
