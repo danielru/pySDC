@@ -99,16 +99,16 @@ class apfasst_transfer(base_transfer):
         assert np.isclose(F.status.time, G.status.time, rtol = 1e-10), "Coarse and fine time step do not have the same initial time"
         assert np.isclose(F.dt, G.dt, rtol = 1e-10), "Coarse and fine time step dt are different"
         
-        print "Beginning of time step: %5.3f" % F.status.time
-        print "Length of time step:    %5.3f" % F.dt
+        #print "Beginning of time step: %5.3f" % F.status.time
+        #print "Length of time step:    %5.3f" % F.dt
         
         fine_nodes_mapped = F.status.time + F.dt*F.sweep.coll.nodes
-        for ttt in fine_nodes_mapped:
-          print "Fine nodes: %5.3f" % ttt
+        #for ttt in fine_nodes_mapped:
+        #  print "Fine nodes: %5.3f" % ttt
             
         coarse_nodes_mapped = G.status.time + G.dt*G.sweep.coll.nodes
-        for ttt in coarse_nodes_mapped:
-          print "Coarse nodes: %5.3f" % ttt
+        #for ttt in coarse_nodes_mapped:
+        #  print "Coarse nodes: %5.3f" % ttt
 
         if np.size(fine_nodes_mapped)==np.size(coarse_nodes_mapped):
           if not np.allclose(fine_nodes_mapped,coarse_nodes_mapped, rtol=1e-10):
@@ -116,7 +116,7 @@ class apfasst_transfer(base_transfer):
         else:
           raise NotImplementedError("The APFASST transfer class currently only works if the coarse and fine quadrature nodes are identical")
 
-        print "\n"
+        #print "\n"
         
         PG = G.prob
 
@@ -128,9 +128,9 @@ class apfasst_transfer(base_transfer):
             raise UnlockError('fine level is still locked, cannot use data from there')
 
         # restrict fine values in space
-        tmp_u = [self.space_transfer_restrict(F.u[0], F.status.time)]
+        tmp_u = [self.space_transfer_restrict(F.u[0], F.status.time, F.status.time)]
         for m in range(1, SF.coll.num_nodes + 1):
-            tmp_u.append(self.space_transfer_restrict(F.u[m], fine_nodes_mapped[m-1]))
+            tmp_u.append(self.space_transfer_restrict(F.u[m], fine_nodes_mapped[m-1], F.status.time))
 
         # restrict collocation values
         G.u[0] = tmp_u[0]
@@ -153,7 +153,7 @@ class apfasst_transfer(base_transfer):
         # restrict fine level tau correction part in space
         tmp_tau = []
         for m in range(0, SF.coll.num_nodes):
-            tmp_tau.append(self.space_transfer_restrict(tauF[m], fine_nodes_mapped[m]))
+            tmp_tau.append(self.space_transfer_restrict(tauF[m], fine_nodes_mapped[m], F.status.time))
 
         # restrict fine level tau correction part in collocation
         tauFG = [tmp_tau[0]]
@@ -170,7 +170,7 @@ class apfasst_transfer(base_transfer):
             # restrict possible tau correction from fine in space
             tmp_tau = []
             for m in range(0, SF.coll.num_nodes):
-                tmp_tau.append(self.space_transfer_restrict(F.tau[m], fine_nodes_mapped[m]))
+                tmp_tau.append(self.space_transfer_restrict(F.tau[m], fine_nodes_mapped[m], F.status.time))
 
             # restrict possible tau correction from fine in collocation
             for n in range(0, SG.coll.num_nodes):
@@ -179,6 +179,7 @@ class apfasst_transfer(base_transfer):
                     G.tau[n] += self.Rcoll[n + 1, m + 1] * tmp_tau[m]
         else:
             pass
+
 
         # save u and rhs evaluations for interpolation
         for m in range(SG.coll.num_nodes + 1):
@@ -190,8 +191,14 @@ class apfasst_transfer(base_transfer):
 
         return None
 
-    def space_transfer_restrict(self, F, t):
-      print "space_transfer_restrict at time: %5.3f" % t
+    def space_transfer_restrict(self, F, t, t0):
+      #print "space_transfer_restrict at time: %5.3f" % t
+      try:
+        U = self.fine.prob.params.U
+        kappa = self.fine.prob.params.kappa
+      except:
+        raise
+      F.values *= np.exp(U*1j*kappa*(t-t0))
       return F
     
     def prolong(self):
@@ -233,12 +240,12 @@ class apfasst_transfer(base_transfer):
         # we need to update u0 here for the predictor step, since here the new values for the fine sweep are not
         # received from the previous processor but interpolated from the coarse level.
         # need to restrict F.u[0] again here, since it might have changed in PFASST
-        G.uold[0] = self.space_transfer_restrict(F.u[0], F.status.time)
+        G.uold[0] = self.space_transfer_restrict(F.u[0], F.status.time, F.status.time)
 
         # interpolate values in space first
-        tmp_u = [self.space_transfer_prolong(G.u[0] - G.uold[0], G.status.time)]
+        tmp_u = [self.space_transfer_prolong(G.u[0] - G.uold[0], G.status.time, G.status.time)]
         for m in range(1, SG.coll.num_nodes + 1):
-            tmp_u.append(self.space_transfer_prolong(G.u[m] - G.uold[m], coarse_nodes_mapped[m-1]))
+            tmp_u.append(self.space_transfer_prolong(G.u[m] - G.uold[m], coarse_nodes_mapped[m-1], G.status.time))
 
         # interpolate values in collocation
         F.u[0] += tmp_u[0]
@@ -253,8 +260,14 @@ class apfasst_transfer(base_transfer):
 
         return None
 
-    def space_transfer_prolong(self, G, t):
-      print "space_transfer_prolong at time: %5.3f" % t
+    def space_transfer_prolong(self, G, t, t0):
+      #print "space_transfer_prolong at time: %5.3f" % t
+      try:
+        U = self.coarse.prob.params.U
+        kappa = self.coarse.prob.params.kappa
+      except:
+        raise
+      G.values *= np.exp(-U*1j*kappa*(t-t0))
       return G
     
     def prolong_f(self):

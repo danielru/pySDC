@@ -27,21 +27,31 @@ def main():
     
     # initialize level parameters
     level_params = dict()
-    level_params['restol'] = 1E-8
+    level_params['restol'] = 1E-14
     level_params['dt']     = (Tend - t0)/float(nproc)
 
     # initialize sweeper parameters
     sweeper_params = dict()
     sweeper_params['collocation_class'] = CollGaussRadau_Right
-    sweeper_params['num_nodes'] = [2, 2]
     sweeper_params['QI'] = 'IE'
 
     # initialize problem parameters
     problem_params = dict()
+
+    ### PFASST
+    sweeper_params['num_nodes'] = [2, 2]
     problem_params['kappa'] = [1.0, 1.0]
-    problem_params['U']     = [1.0, 1.0] # advection is being taken care of by transfer operators
+    problem_params['U']     = [1.0, 0.0] # advection is being taken care of by transfer operators
     problem_params['nu']    = [0.0, 0.0]
     problem_params['dx']    = [0.0, 0.0]
+
+
+    ### SDC
+    #sweeper_params['num_nodes'] = [2]
+    #problem_params['kappa'] = [1.0]
+    #problem_params['U']     = [1.0] # advection is being taken care of by transfer operators
+    #problem_params['nu']    = [0.0]
+    #problem_params['dx']    = [0.0]
 
     # initialize space transfer parameters
     space_transfer_params = dict() ### Won't be used
@@ -50,7 +60,7 @@ def main():
     
     # initialize step parameters
     step_params = dict()
-    step_params['maxiter'] = 1
+    step_params['maxiter'] = 15
 
     # initialize controller parameters
     controller_params = dict()
@@ -90,7 +100,7 @@ def main():
     uend, stats = controller.run(u0=uinit, t0=t0, Tend=Tend)
 
     # filter statistics by type (number of iterations)
-    filtered_stats = filter_stats(stats, time=Tend, type='residual_post_iteration')
+    filtered_stats = filter_stats(stats, time=t0, type='residual_post_iteration')
     
     # sort and convert stats to list, sorted by iteration numbers
     residuals = sort_stats(filtered_stats, sortby='iter')
