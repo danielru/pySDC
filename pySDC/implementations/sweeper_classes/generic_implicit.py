@@ -84,7 +84,7 @@ class generic_implicit(sweeper):
             integral[m] += L.u[0]
             # add tau if associated
             if L.tau is not None:
-                integral[m] += L.tau[m]
+                integral[m] += 0.0*L.tau[m]
 
         # do the sweep
         for m in range(0, M):
@@ -129,6 +129,6 @@ class generic_implicit(sweeper):
                 L.uend += L.dt * self.coll.weights[m] * L.f[m + 1]
             # add up tau correction of the full interval (last entry)
             if L.tau is not None:
-                L.uend += L.tau[-1]
+                L.uend += 0.0*L.tau[-1]
 
         return None
