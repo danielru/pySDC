@@ -13,6 +13,10 @@ class mesh(object):
     Attributes:
         values (np.ndarray): contains the ndarray of the values
     """
+  
+    # BEWARE: THIS MEANS YOU WILL HAVE TO KEEP THIS IN SYNC WITH WHATEVER YOU GIVE THE CODE IN YOUR PYSDC PARAMETERS
+    # !!!111elfelfCAPSLOCK
+    mymesh = UnitIntervalMesh(16)
 
     def __init__(self, init=None, val=None):
         """
@@ -29,18 +33,16 @@ class mesh(object):
         # if init is another mesh, do a deepcopy (init by copy)
         if isinstance(init, mesh):
             # deepcopy of f which should be a firedrake function
-            self.f = init.f.copy(deepcopy=True)            
-            self.V = init.V
+            self.f = init.f.copy(deepcopy=True)  
 
         # if init is a number or a tuple of numbers, create mesh object with val as initial value
         elif isinstance(init, tuple) or isinstance(init, int):
+
             ### FIXME: for now, we assume that the mesh and function space is always the same and hard-code it here. Bad code! ###
-            Nx   = 100
             assert isinstance(init, int), NotImplementedError("Cannot yet use firedrake mesh init routine with tupel sized data")
-            mymesh = UnitIntervalMesh(init)
-            self.V = FunctionSpace(mymesh, "CG", 2)
-            self.f = Function(self.V)
+            self.f = Function(FunctionSpace(mesh.mymesh, "CG", 2))
             self.f.interpolate(Expression("x[0] = a", a=val))
+
         # something is wrong, if none of the ones above hit
         else:
             raise DataError('something went wrong during %s initialization' % type(self))
@@ -59,8 +61,8 @@ class mesh(object):
 
         if isinstance(other, mesh):
             # always create new mesh, since otherwise c = a + b changes a as well!
-            me = mesh(other)
-            me.f = self.f + other.f
+            me   = mesh(self)   
+            me.f += other.f
             return me
         else:
             raise DataError("Type error: cannot add %s to %s" % (type(other), type(self)))
@@ -78,12 +80,12 @@ class mesh(object):
         """
 
         if isinstance(other, mesh):
-            # always create new mesh, since otherwise c = a - b changes a as well!
-            me = mesh(np.shape(self.values))
-            me.values = self.values - other.values
+            # always create new mesh, since otherwise c = a + b changes a as well!
+            me = mesh(self)
+            me.f -= other.f
             return me
         else:
-            raise DataError("Type error: cannot subtract %s from %s" % (type(other), type(self)))
+            raise DataError("Type error: cannot add %s to %s" % (type(other), type(self)))
 
     def __rmul__(self, other):
         """
@@ -97,13 +99,10 @@ class mesh(object):
             mesh.mesh: copy of original values scaled by factor
         """
 
-        if isinstance(other, float) or isinstance(other, complex):
-            # always create new mesh, since otherwise c = f*a changes a as well!
-            me = mesh(np.shape(self.values))
-            me.values = self.values * other
-            return me
-        else:
-            raise DataError("Type error: cannot multiply %s to %s" % (type(other), type(self)))
+        # always create new mesh, since otherwise c = a + b changes a as well!
+        me = mesh(self)
+        me.f *= other
+        return me
 
     def __abs__(self):
         """
@@ -113,10 +112,8 @@ class mesh(object):
             float: absolute maximum of all mesh values
         """
 
-        # take absolute values of the mesh values
-        absval = abs(self.values)
         # return maximum
-        return np.amax(absval)
+        return np.linalg.norm(self.f.vector(), np.inf)
 
     def apply_mat(self, A):
         """
@@ -128,14 +125,7 @@ class mesh(object):
         Returns:
             mesh.mesh: component multiplied by the matrix A
         """
-        if not A.shape[1] == self.values.shape[0]:
-            raise DataError("ERROR: cannot apply operator %s to %s" % (A, self))
-
-        me = mesh(A.shape[0])
-        me.values = A.dot(self.values)
-
-        return me
-
+        raise NotImplementedError("apply_mat is not implemented for firedrake_mesh")
 
 class rhs_imex_mesh(object):
     """
