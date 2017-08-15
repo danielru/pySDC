@@ -38,18 +38,17 @@ class shallowwater_imex(ptype):
         # Create GUSTO mesh and state
         ref_level = 3
         dirname = "sw_W2_ref%s" % (ref_level)
+        R = 6371220 # in metres
         mesh = IcosahedralSphereMesh(radius=R,
                                      refinement_level=ref_level, degree=3)
         x = SpatialCoordinate(mesh)
         global_normal = x
         mesh.init_cell_orientations(x)
 
-        timestepping = TimesteppingParameters(dt=dt)
         output = OutputParameters(dirname=dirname, dumplist_latlon=['D', 'D_error'], steady_state_error_fields=['D', 'u'])
 
         self.state = State(mesh, horizontal_degree=1,
                       family="BDM",
-                      timestepping=timestepping,
                       output=output,
                       parameters=parameters,
                       diagnostics=diagnostics,
