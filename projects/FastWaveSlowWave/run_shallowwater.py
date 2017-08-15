@@ -7,8 +7,8 @@ from matplotlib import pyplot as plt
 from pylab import rcParams
 
 #from projects.FastWaveSlowWave.HookClass_acoustic import dump_energy
-from pySDC.implementations.collocation_classes.gauss_legendre import CollGaussRadauLegendre
-from pySDC.implementations.datatype_classes.firedrake_ import mesh, rhs_imex_mesh
+from pySDC.implementations.collocation_classes.gauss_legendre import CollGaussLegendre
+from pySDC.implementations.datatype_classes.firedrake_mesh import mesh, rhs_imex_mesh
 from pySDC.implementations.sweeper_classes.imex_1st_order import imex_1st_order
 from pySDC.implementations.controller_classes.allinclusive_classic_nonMPI import allinclusive_classic_nonMPI
 #from pySDC.implementations.problem_classes.acoustic_helpers.standard_integrators import bdf2, dirk, trapezoidal, rk_imex
@@ -22,7 +22,7 @@ def compute_and_plot_solutions():
 
     t0 = 0.0
     Tend = 3.0
-    nsteps = 154  # 154 is value in Vater et al.
+    nsteps = 1  # 154 is value in Vater et al.
     dt = Tend / float(nsteps)
 
     # initialize level parameters
