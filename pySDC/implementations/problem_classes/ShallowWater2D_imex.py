@@ -3,7 +3,7 @@ from pySDC.core.Problem import ptype
 from pySDC.core.Errors import ParameterError
 from pySDC.implementations.datatype_classes.firedrake_mesh import mesh, rhs_imex_mesh
 
-from firedrake import Function, SpatialCoordinate, LinearVariationalProblem, LinearVariationalSolver, Expression
+from firedrake import Function, SpatialCoordinate, LinearVariationalProblem, LinearVariationalSolver, Expression, as_vector
 from gusto import *
 
 # noinspection PyUnusedLocal
