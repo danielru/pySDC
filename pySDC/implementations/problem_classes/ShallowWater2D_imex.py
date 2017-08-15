@@ -50,11 +50,11 @@ class shallowwater_imex(ptype):
         output = OutputParameters(dirname=dirname, dumplist_latlon=['D', 'D_error'], steady_state_error_fields=['D', 'u'])
         fieldlist = ['u', 'D']
         self.state = State(mesh.mymesh, horizontal_degree=1,
-                      family="BDM",
-                      output=output,
-                      parameters=parameters,
-                      diagnostics=diagnostics,
-                      fieldlist=fieldlist)        
+                           family="BDM",
+                           output=output,
+                           parameters=parameters,
+                           diagnostics=diagnostics,
+                           fieldlist=fieldlist)        
 
         #ueqn = VectorInvariant(state, u0.function_space())
         #Deqn = AdvectionEquation(state, D0.function_space(), equation_form="continuity")
