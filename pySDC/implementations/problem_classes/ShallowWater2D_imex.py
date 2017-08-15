@@ -92,7 +92,12 @@ class shallowwater_imex(ptype):
 
         fexpl = self.dtype_u(self.init)
 #        fexpl.f = u.f.copy(deepcopy=True)
-        self.Deqn.ubar.assign(1.0)
+
+        x = SpatialCoordinate(self.state.mesh)
+        u_max = 2*np.pi*self.R/(12*self.day)  # Maximum amplitude of the zonal wind (m/s)
+        uexpr = as_vector([-u_max*x[1]/self.R, u_max*x[0]/self.R, 0.0])
+
+        self.Deqn.ubar.project(uexpr)
         lhs = self.Deqn.mass_term(self.Deqn.trial)
         rhs = self.Deqn.advection_term(-1.0*fexpl.f)
         prob = LinearVariationalProblem(lhs, rhs, fexpl.f)
