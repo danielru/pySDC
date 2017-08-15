@@ -43,7 +43,7 @@ class mesh(object):
 
             ### FIXME: for now, we assume that the mesh and function space is always the same and hard-code it here. Bad code! ###
             assert isinstance(init, int), NotImplementedError("Cannot yet use firedrake mesh init routine with tupel sized data")
-            self.f = Function(FunctionSpace(mesh.mymesh, "CG", 2))
+            self.f = Function(FunctionSpace(mesh.mymesh, "DG", 1))
             self.f.interpolate(Expression("x[0] = a", a=val))
 
         # something is wrong, if none of the ones above hit
