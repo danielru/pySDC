@@ -90,9 +90,9 @@ class shallowwater_imex(ptype):
         Returns:
             explicit part of RHS
         """
-
+        print u.f.vector()
         fexpl = self.dtype_u(self.init)
-#        fexpl.f = u.f.copy(deepcopy=True)
+        fexpl.f = u.f.copy(deepcopy=True)
 
         x = SpatialCoordinate(self.state.mesh)
         u_max = -2*np.pi*self.R/(12*self.day)  # Maximum amplitude of the zonal wind (m/s); minus because pySDC assumes term is on rhs
