@@ -1,6 +1,7 @@
 import numpy as np
 from pySDC.core.Problem import ptype
 from pySDC.core.Errors import ParameterError
+from pySDC.implementations.datatype_classes.firedrake_mesh import mesh, rhs_imex_mesh
 
 from firedrake import *
 from gusto import *
@@ -40,15 +41,15 @@ class shallowwater_imex(ptype):
         dirname = "sw_W2_ref%s" % (ref_level)
         self.R = 6371220 # in metres
         self.day = 24*60*60
-        mesh = IcosahedralSphereMesh(radius=self.R,
+        #mesh = IcosahedralSphereMesh(radius=self.R,
                                      refinement_level=ref_level, degree=3)
-        x = SpatialCoordinate(mesh)
+        x = SpatialCoordinate(mesh.mymesh)
         global_normal = x
         mesh.init_cell_orientations(x)
         parameters = ShallowWaterParameters()
         output = OutputParameters(dirname=dirname, dumplist_latlon=['D', 'D_error'], steady_state_error_fields=['D', 'u'])
         fieldlist = ['u', 'D']
-        self.state = State(mesh, horizontal_degree=1,
+        self.state = State(mesh.mymesh, horizontal_degree=1,
                       family="BDM",
                       output=output,
                       parameters=parameters,
