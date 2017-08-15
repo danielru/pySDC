@@ -94,12 +94,12 @@ class shallowwater_imex(ptype):
 #        fexpl.f = u.f.copy(deepcopy=True)
 
         x = SpatialCoordinate(self.state.mesh)
-        u_max = 2*np.pi*self.R/(12*self.day)  # Maximum amplitude of the zonal wind (m/s)
+        u_max = -2*np.pi*self.R/(12*self.day)  # Maximum amplitude of the zonal wind (m/s); minus because pySDC assumes term is on rhs
         uexpr = as_vector([-u_max*x[1]/self.R, u_max*x[0]/self.R, 0.0])
 
         self.Deqn.ubar.project(uexpr)
         lhs = self.Deqn.mass_term(self.Deqn.trial)
-        rhs = self.Deqn.advection_term(-1.0*fexpl.f)
+        rhs = self.Deqn.advection_term(fexpl.f)
         prob = LinearVariationalProblem(lhs, rhs, fexpl.f)
         solver = LinearVariationSolver(prob)
         solver.solve()
