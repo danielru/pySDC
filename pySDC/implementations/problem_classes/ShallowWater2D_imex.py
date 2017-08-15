@@ -42,7 +42,7 @@ class shallowwater_imex(ptype):
         self.R = 6371220 # in metres
         self.day = 24*60*60
         #mesh = IcosahedralSphereMesh(radius=self.R,
-                                     refinement_level=ref_level, degree=3)
+        #                             refinement_level=ref_level, degree=3)
         x = SpatialCoordinate(mesh.mymesh)
         global_normal = x
         mesh.init_cell_orientations(x)
