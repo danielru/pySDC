@@ -56,7 +56,7 @@ class shallowwater_imex(ptype):
 
         #ueqn = VectorInvariant(state, u0.function_space())
         #Deqn = AdvectionEquation(state, D0.function_space(), equation_form="continuity")
-        self.Deqn = AdvectionEquation(state, D0.function_space())
+        self.Deqn = AdvectionEquation(state, self.state.spaces("DG"))
 
 
     def solve_system(self, rhs, factor, u0, t):
