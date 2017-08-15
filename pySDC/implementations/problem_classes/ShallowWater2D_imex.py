@@ -168,5 +168,5 @@ class shallowwater_imex(ptype):
                           ('D', D0)])
 
         me = self.dtype_u(self.init)
-        me.f = self.state.xn
+        me.f = D0
         return me
