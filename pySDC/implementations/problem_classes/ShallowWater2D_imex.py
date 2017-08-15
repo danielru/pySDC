@@ -3,7 +3,7 @@ from pySDC.core.Problem import ptype
 from pySDC.core.Errors import ParameterError
 from pySDC.implementations.datatype_classes.firedrake_mesh import mesh, rhs_imex_mesh
 
-from firedrake import *
+from firedrake import Function, SpatialCoordinate, LinearVariationalProblem, LinearVariationalSolver, Expression
 from gusto import *
 
 # noinspection PyUnusedLocal
@@ -45,7 +45,7 @@ class shallowwater_imex(ptype):
         #                             refinement_level=ref_level, degree=3)
         x = SpatialCoordinate(mesh.mymesh)
         global_normal = x
-        mesh.init_cell_orientations(x)
+        mesh.mymesh.init_cell_orientations(x)
         parameters = ShallowWaterParameters()
         output = OutputParameters(dirname=dirname, dumplist_latlon=['D', 'D_error'], steady_state_error_fields=['D', 'u'])
         fieldlist = ['u', 'D']
@@ -102,7 +102,7 @@ class shallowwater_imex(ptype):
         lhs = self.Deqn.mass_term(self.Deqn.trial)
         rhs = self.Deqn.advection_term(fexpl.f)
         prob = LinearVariationalProblem(lhs, rhs, fexpl.f)
-        solver = LinearVariationSolver(prob)
+        solver = LinearVariationalSolver(prob)
         solver.solve()
         return fexpl
 
