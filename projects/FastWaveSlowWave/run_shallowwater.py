@@ -11,6 +11,8 @@ from pySDC.implementations.collocation_classes.gauss_legendre import CollGaussLe
 from pySDC.implementations.datatype_classes.firedrake_mesh import mesh, rhs_imex_mesh
 from pySDC.implementations.sweeper_classes.imex_1st_order import imex_1st_order
 from pySDC.implementations.controller_classes.allinclusive_classic_nonMPI import allinclusive_classic_nonMPI
+from pySDC.implementations.problem_classes.ShallowWater2D_imex import shallowwater_imex
+
 #from pySDC.implementations.problem_classes.acoustic_helpers.standard_integrators import bdf2, dirk, trapezoidal, rk_imex
 
 def compute_and_plot_solutions():
