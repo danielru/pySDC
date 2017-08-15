@@ -91,11 +91,11 @@ class shallowwater_imex(ptype):
         """
 
         fexpl = self.dtype_u(self.init)
-        fexpl.f = u.f.copy(deepcopy=True)
+#        fexpl.f = u.f.copy(deepcopy=True)
         self.Deqn.ubar.assign(1.0)
         lhs = self.Deqn.mass_term(self.Deqn.trial)
         rhs = self.Deqn.advection_term(-1.0*fexpl.f)
-        prob = LinearVariationalProblem(lhs, rhs, x)
+        prob = LinearVariationalProblem(lhs, rhs, fexpl.f)
         solver = LinearVariationSolver(prob)
         solver.solve()
         return fexpl
@@ -114,7 +114,7 @@ class shallowwater_imex(ptype):
 
 
         fimpl = self.dtype_u(self.init, val=0)
-        fimpl.assign(0.0)
+        fimpl.f.assign(0.0)
         return fimpl
 
     def eval_f(self, u, t):
