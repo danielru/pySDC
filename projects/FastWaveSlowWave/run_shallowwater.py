@@ -44,7 +44,7 @@ def compute_and_plot_solutions():
 
     # This comes as read-in for the sweeper class
     sweeper_params = dict()
-    sweeper_params['collocation_class'] = CollGaussRadauLegendre
+    sweeper_params['collocation_class'] = CollGaussLegendre
     sweeper_params['num_nodes'] = 2
 
     # initialize controller parameters
