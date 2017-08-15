@@ -46,7 +46,7 @@ class shallowwater_imex(ptype):
         mesh.init_cell_orientations(x)
 
         output = OutputParameters(dirname=dirname, dumplist_latlon=['D', 'D_error'], steady_state_error_fields=['D', 'u'])
-
+        fieldlist = ['u', 'D']
         self.state = State(mesh, horizontal_degree=1,
                       family="BDM",
                       output=output,
