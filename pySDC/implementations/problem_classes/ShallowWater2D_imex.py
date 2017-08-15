@@ -36,7 +36,8 @@ class shallowwater_imex(ptype):
         super(shallowwater_imex, self).__init__(problem_params['nvars'], dtype_u, dtype_f, problem_params)
 
         # Create GUSTO mesh and state
-        dirname = "sw_W2_ref%s_dt%s" % (ref_level, dt)
+        ref_level = 3
+        dirname = "sw_W2_ref%s" % (ref_level)
         mesh = IcosahedralSphereMesh(radius=R,
                                      refinement_level=ref_level, degree=3)
         x = SpatialCoordinate(mesh)
