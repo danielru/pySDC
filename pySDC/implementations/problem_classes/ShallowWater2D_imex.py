@@ -45,7 +45,7 @@ class shallowwater_imex(ptype):
         x = SpatialCoordinate(mesh)
         global_normal = x
         mesh.init_cell_orientations(x)
-
+        parameters = ShallowWaterParameters()
         output = OutputParameters(dirname=dirname, dumplist_latlon=['D', 'D_error'], steady_state_error_fields=['D', 'u'])
         fieldlist = ['u', 'D']
         self.state = State(mesh, horizontal_degree=1,
