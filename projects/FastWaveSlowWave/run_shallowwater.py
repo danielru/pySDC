@@ -6,7 +6,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from pylab import rcParams
 
-#from projects.FastWaveSlowWave.HookClass_acoustic import dump_energy
+from projects.FastWaveSlowWave.HookClass_shallowwater import dump_solution
 from pySDC.implementations.collocation_classes.gauss_legendre import CollGaussLegendre
 from pySDC.implementations.datatype_classes.firedrake_mesh import mesh, rhs_imex_mesh
 from pySDC.implementations.sweeper_classes.imex_1st_order import imex_1st_order
@@ -52,7 +52,7 @@ def compute_and_plot_solutions():
     # initialize controller parameters
     controller_params = dict()
     controller_params['logger_level'] = 30
-    #controller_params['hook_class'] = dump_energy
+    controller_params['hook_class'] = dump_solution
 
     # Fill description dictionary for easy hierarchy creation
     description = dict()
