@@ -38,8 +38,9 @@ class shallowwater_imex(ptype):
         # Create GUSTO mesh and state
         ref_level = 3
         dirname = "sw_W2_ref%s" % (ref_level)
-        R = 6371220 # in metres
-        mesh = IcosahedralSphereMesh(radius=R,
+        self.R = 6371220 # in metres
+        self.day = 24*60*60
+        mesh = IcosahedralSphereMesh(radius=self.R,
                                      refinement_level=ref_level, degree=3)
         x = SpatialCoordinate(mesh)
         global_normal = x
@@ -148,12 +149,12 @@ class shallowwater_imex(ptype):
         # interpolate initial conditions
         u0 = self.state.fields("u")
         D0 = self.state.fields("D")
-        x = SpatialCoordinate(mesh)
-        u_max = 2*pi*R/(12*day)  # Maximum amplitude of the zonal wind (m/s)
-        uexpr = as_vector([-u_max*x[1]/R, u_max*x[0]/R, 0.0])
-        Omega = parameters.Omega
-        g = parameters.g
-        Dexpr = Expression("R*acos(fmin(((x[0]*x0 + x[1]*x1 + x[2]*x2)/(R*R)), 1.0)) < rc ? (h0/2.0)*(1 + cos(pi*R*acos(fmin(((x[0]*x0 + x[1]*x1 + x[2]*x2)/(R*R)), 1.0))/rc)) : 0.0", R=R, rc=R/3., h0=1000., x0=0.0, x1=-R, x2=0.0)
+        x = SpatialCoordinate(self.state.mesh)
+        u_max = 2*np.pi*self.R/(12*self.day)  # Maximum amplitude of the zonal wind (m/s)
+        uexpr = as_vector([-u_max*x[1]/self.R, u_max*x[0]/self.R, 0.0])
+        Omega = self.state.parameters.Omega
+        g = self.state.parameters.g
+        Dexpr = Expression("R*acos(fmin(((x[0]*x0 + x[1]*x1 + x[2]*x2)/(R*R)), 1.0)) < rc ? (h0/2.0)*(1 + cos(pi*R*acos(fmin(((x[0]*x0 + x[1]*x1 + x[2]*x2)/(R*R)), 1.0))/rc)) : 0.0", R=self.R, rc=self.R/3., h0=1000., x0=0.0, x1=-self.R, x2=0.0)
 
         u0.project(uexpr)
         D0.interpolate(Dexpr)
