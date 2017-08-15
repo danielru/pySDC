@@ -114,7 +114,7 @@ class shallowwater_imex(ptype):
 
 
         fimpl = self.dtype_u(self.init, val=0)
-        fimp.assign(0.0)
+        fimpl.assign(0.0)
         return fimpl
 
     def eval_f(self, u, t):
