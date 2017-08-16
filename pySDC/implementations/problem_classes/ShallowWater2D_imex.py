@@ -36,8 +36,6 @@ class shallowwater_imex(ptype):
         # invoke super init, passing number of dofs, dtype_u and dtype_f
         super(shallowwater_imex, self).__init__(problem_params['nvars'], dtype_u, dtype_f, problem_params)
 
- 
-
         #ueqn = VectorInvariant(state, u0.function_space())
         #Deqn = AdvectionEquation(state, D0.function_space(), equation_form="continuity")
         self.Deqn = AdvectionEquation(mesh.state, mesh.state.spaces("DG"))
@@ -72,6 +70,8 @@ class shallowwater_imex(ptype):
         Returns:
             explicit part of RHS
         """
+
+        print(u.f.dat.data.min(), u.f.dat.data.max())
 
         fexpl = self.dtype_u(self.init)
         fexpl.f.assign(0.0)
@@ -146,8 +146,8 @@ class shallowwater_imex(ptype):
 
         u0.project(uexpr)
         D0.interpolate(Dexpr)
+
         mesh.state.initialise([('u', u0),
-                          ('D', D0)])
 
         me = self.dtype_u(self.init)
         me.f = D0

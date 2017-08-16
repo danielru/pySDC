@@ -18,7 +18,7 @@ class mesh(object):
     # BEWARE: THIS MEANS YOU WILL HAVE TO KEEP THIS IN SYNC WITH WHATEVER YOU GIVE THE CODE IN YOUR PYSDC PARAMETERS
     # !!!111elfelfCAPSLOCK
     R = 6371220
-    ref_level = 0
+    ref_level = 3
     mymesh = IcosahedralSphereMesh(radius=R, refinement_level=ref_level, degree=3)
     myfunctionspace = FunctionSpace(mesh.mymesh, "DG", 1)
 
@@ -33,7 +33,7 @@ class mesh(object):
     parameters = ShallowWaterParameters()
     output = OutputParameters(dirname=dirname, dumplist_latlon=['D', 'D_error'], steady_state_error_fields=['D', 'u'])
     fieldlist = ['u', 'D']
-     state = State(mesh.mymesh, horizontal_degree=1,
+    state = State(mesh.mymesh, horizontal_degree=1,
                            family="BDM",
                            output=output,
                            parameters=parameters,
