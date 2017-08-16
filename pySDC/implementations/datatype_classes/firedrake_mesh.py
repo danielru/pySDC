@@ -21,7 +21,6 @@ class mesh(object):
     ref_level = 4
     mymesh = IcosahedralSphereMesh(radius=R, refinement_level=ref_level, degree=3)
     # Create GUSTO mesh and state
-    ref_level = 3
     dirname = "sw_W2_ref%s" % (ref_level)
     R = 6371220. # in metres
     day = 86400.
