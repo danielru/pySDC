@@ -36,34 +36,14 @@ class shallowwater_imex(ptype):
         # invoke super init, passing number of dofs, dtype_u and dtype_f
         super(shallowwater_imex, self).__init__(problem_params['nvars'], dtype_u, dtype_f, problem_params)
 
-        # Create GUSTO mesh and state
-        ref_level = 3
-        dirname = "sw_W2_ref%s" % (ref_level)
-        self.R = 6371220. # in metres
-        self.day = 86400.
-        #mesh = IcosahedralSphereMesh(radius=self.R,
-        #                             refinement_level=ref_level, degree=3)
-        x = SpatialCoordinate(mesh.mymesh)
-        global_normal = x
-        mesh.mymesh.init_cell_orientations(x)
-        parameters = ShallowWaterParameters()
-        output = OutputParameters(dirname=dirname, dumplist_latlon=['D', 'D_error'], steady_state_error_fields=['D', 'u'])
-        fieldlist = ['u', 'D']
-        self.state = State(mesh.mymesh, horizontal_degree=1,
-                           family="BDM",
-                           output=output,
-                           parameters=parameters,
-                           diagnostics=diagnostics,
-                           fieldlist=fieldlist)        
-
         #ueqn = VectorInvariant(state, u0.function_space())
         #Deqn = AdvectionEquation(state, D0.function_space(), equation_form="continuity")
-        self.Deqn = AdvectionEquation(self.state, self.state.spaces("DG"))
-        self.forcing = ShallowWaterForcing(state)
+        self.Deqn = AdvectionEquation(mesh.state, mesh.state.spaces("DG"))
+        self.forcing = ShallowWaterForcing(mesh.state)
 
     def solve_system(self, rhs, factor, u0, t):
         """
-        Simple linear solver for (I-dtA)u = rhs
+        Simple linear solver for (M-dt*f_impl)(u) = rhs
 
         Args:
             rhs (dtype_f): right-hand side for the nonlinear system
@@ -90,11 +70,13 @@ class shallowwater_imex(ptype):
         Returns:
             explicit part of RHS
         """
+
         print(u.f.dat.data.min(), u.f.dat.data.max())
+
         fexpl = self.dtype_u(self.init)
         fexpl.f.assign(0.0)
 
-        x = SpatialCoordinate(self.state.mesh)
+        x = SpatialCoordinate(mesh.state.mesh)
         u_max = -2*np.pi*self.R/(12*self.day)  # Maximum amplitude of the zonal wind (m/s); minus because pySDC assumes term is on rhs
         uexpr = as_vector([-u_max*x[1]/self.R, u_max*x[0]/self.R, 0.0])
 
@@ -159,20 +141,19 @@ class shallowwater_imex(ptype):
 
 
         # interpolate initial conditions
-        u0 = self.state.fields("u")
-        D0 = self.state.fields("D")
+        u0 = mesh.state.fields("u")
+        D0 = mesh.state.fields("D")
         x = SpatialCoordinate(self.state.mesh)
-        u_max = 2*np.pi*self.R/(12*self.day)  # Maximum amplitude of the zonal wind (m/s)
-        uexpr = as_vector([-u_max*x[1]/self.R, u_max*x[0]/self.R, 0.0])
-        Omega = self.state.parameters.Omega
-        g = self.state.parameters.g
-        Dexpr = Expression("R*acos(fmin(((x[0]*x0 + x[1]*x1 + x[2]*x2)/(R*R)), 1.0)) < rc ? (h0/2.0)*(1 + cos(pi*R*acos(fmin(((x[0]*x0 + x[1]*x1 + x[2]*x2)/(R*R)), 1.0))/rc)) : 0.0", R=self.R, rc=self.R/3., h0=1000., x0=0.0, x1=-self.R, x2=0.0)
+        u_max = 2*np.pi*mesh.R/(12*mesh.day)  # Maximum amplitude of the zonal wind (m/s)
+        uexpr = as_vector([-u_max*x[1]/mesh.R, u_max*x[0]/mesh.R, 0.0])
+        Omega = mesh.state.parameters.Omega
+        g = mesh.state.parameters.g
+        Dexpr = Expression("R*acos(fmin(((x[0]*x0 + x[1]*x1 + x[2]*x2)/(R*R)), 1.0)) < rc ? (h0/2.0)*(1 + cos(pi*R*acos(fmin(((x[0]*x0 + x[1]*x1 + x[2]*x2)/(R*R)), 1.0))/rc)) : 0.0", R=mesh.R, rc=mesh.R/3., h0=1000., x0=0.0, x1=-mesh.R, x2=0.0)
 
         u0.project(uexpr)
         D0.interpolate(Dexpr)
 
-        self.state.initialise([('u', u0),
-                          ('D', D0)])
+        mesh.state.initialise([('u', u0),
 
         me = self.dtype_u(self.init)
         me.f = D0
