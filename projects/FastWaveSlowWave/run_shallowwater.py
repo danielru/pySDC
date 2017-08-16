@@ -23,8 +23,8 @@ def compute_and_plot_solutions():
     num_procs = 1
 
     t0 = 0.0
-    Tend = 3.0
-    nsteps = 1  # 154 is value in Vater et al.
+    Tend = 10000.0
+    nsteps = 100  # 154 is value in Vater et al.
     dt = Tend / float(nsteps)
 
     # initialize level parameters
