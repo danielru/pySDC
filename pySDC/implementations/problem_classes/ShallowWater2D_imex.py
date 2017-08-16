@@ -39,8 +39,8 @@ class shallowwater_imex(ptype):
         # Create GUSTO mesh and state
         ref_level = 3
         dirname = "sw_W2_ref%s" % (ref_level)
-        self.R = 6371220 # in metres
-        self.day = 24*60*60
+        self.R = 6371220. # in metres
+        self.day = 86400.
         #mesh = IcosahedralSphereMesh(radius=self.R,
         #                             refinement_level=ref_level, degree=3)
         x = SpatialCoordinate(mesh.mymesh)
@@ -90,7 +90,7 @@ class shallowwater_imex(ptype):
         Returns:
             explicit part of RHS
         """
-        print u.f.vector()
+        print(u.f.dat.data.min(), u.f.dat.data.max())
         fexpl = self.dtype_u(self.init)
         fexpl.f.assign(0.0)
 
@@ -164,6 +164,7 @@ class shallowwater_imex(ptype):
 
         u0.project(uexpr)
         D0.interpolate(Dexpr)
+
         self.state.initialise([('u', u0),
                           ('D', D0)])
 

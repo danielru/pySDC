@@ -18,7 +18,7 @@ class mesh(object):
     # BEWARE: THIS MEANS YOU WILL HAVE TO KEEP THIS IN SYNC WITH WHATEVER YOU GIVE THE CODE IN YOUR PYSDC PARAMETERS
     # !!!111elfelfCAPSLOCK
     R = 6371220
-    ref_level = 0
+    ref_level = 3
     mymesh = IcosahedralSphereMesh(radius=R, refinement_level=ref_level, degree=3)
 
     def __init__(self, init=None, val=None):
