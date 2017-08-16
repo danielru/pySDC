@@ -71,21 +71,20 @@ class shallowwater_imex(ptype):
             explicit part of RHS
         """
 
-        print(u.f.dat.data.min(), u.f.dat.data.max())
+        un, Dn = u.f.split()
+        print(Dn.dat.data.min(), Dn.dat.data.max())
 
         fexpl = self.dtype_u(self.init)
-        fexpl.f.assign(0.0)
+        uout, Dout = fexpl.f.split()
+        Dout.assign(0.0)
 
-        x = SpatialCoordinate(mesh.state.mesh)
-        u_max = -2*np.pi*self.R/(12*self.day)  # Maximum amplitude of the zonal wind (m/s); minus because pySDC assumes term is on rhs
-        uexpr = as_vector([-u_max*x[1]/self.R, u_max*x[0]/self.R, 0.0])
-
-        self.Deqn.ubar.project(uexpr)
+        self.Deqn.ubar.project(un)
         lhs = self.Deqn.mass_term(self.Deqn.trial)
-        rhs = self.Deqn.advection_term(u.f)
-        prob = LinearVariationalProblem(lhs, rhs, fexpl.f)
+        rhs = self.Deqn.advection_term(Dn)
+        prob = LinearVariationalProblem(lhs, rhs, Dout)
         solver = LinearVariationalSolver(prob)
         solver.solve()
+
         return fexpl
 
     def __eval_fimpl(self, u, t):
@@ -104,10 +103,10 @@ class shallowwater_imex(ptype):
         fimpl = self.dtype_u(self.init, val=0)
         fimpl.f.assign(0.0)
         lhs = self.Deqn.mass_term(self.Deqn.trial)
-        rhs = self.forcing.divu_term(u.f)
-        prob = LinearVariationalProblem(lhs, rhs, fimpl.f)
-        solver = LinearVariationalSolver(prob)
-        solver.solve()
+        #rhs = self.forcing.divu_term(u.f)
+        #prob = LinearVariationalProblem(lhs, rhs, fimpl.f)
+        #solver = LinearVariationalSolver(prob)
+        #solver.solve()
 
         return fimpl
 

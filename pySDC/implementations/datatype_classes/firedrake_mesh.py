@@ -134,7 +134,8 @@ class mesh(object):
         """
 
         # return maximum
-        return np.linalg.norm(self.f.vector(), np.inf)
+        u, D, = self.f.split()
+        return np.linalg.norm(u.vector(), np.inf) + np.linalg.norm(D.vector(), np.inf)
 
     def apply_mat(self, A):
         """
