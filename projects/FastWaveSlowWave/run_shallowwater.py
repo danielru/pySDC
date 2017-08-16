@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 from pylab import rcParams
 
 from projects.FastWaveSlowWave.HookClass_shallowwater import dump_solution
-from pySDC.implementations.collocation_classes.gauss_legendre import CollGaussLegendre
+from pySDC.implementations.collocation_classes.gauss_lobatto import CollGaussLobatto
 from pySDC.implementations.datatype_classes.firedrake_mesh import mesh, rhs_imex_mesh
 from pySDC.implementations.sweeper_classes.imex_1st_order import imex_1st_order
 from pySDC.implementations.controller_classes.allinclusive_classic_nonMPI import allinclusive_classic_nonMPI
@@ -23,8 +23,8 @@ def compute_and_plot_solutions():
     num_procs = 1
 
     t0 = 0.0
-    Tend = 10000.0
-    nsteps = 100  # 154 is value in Vater et al.
+    Tend = 1209600. # 14 days
+    nsteps = 2688  # gives timestep of 450s
     dt = Tend / float(nsteps)
 
     # initialize level parameters
@@ -34,7 +34,7 @@ def compute_and_plot_solutions():
 
     # This comes as read-in for the step class
     step_params = dict()
-    step_params['maxiter'] = 2
+    step_params['maxiter'] = 1
 
     # This comes as read-in for the problem class
     problem_params = dict()
@@ -46,7 +46,7 @@ def compute_and_plot_solutions():
 
     # This comes as read-in for the sweeper class
     sweeper_params = dict()
-    sweeper_params['collocation_class'] = CollGaussLegendre
+    sweeper_params['collocation_class'] = CollGaussLobatto
     sweeper_params['num_nodes'] = 2
 
     # initialize controller parameters
