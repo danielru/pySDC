@@ -99,14 +99,18 @@ class shallowwater_imex(ptype):
             implicit part of RHS
         """
 
+        un, Dn = u.f.split()
+        print(Dn.dat.data.min(), Dn.dat.data.max())
 
-        fimpl = self.dtype_u(self.init, val=0)
-        fimpl.f.assign(0.0)
+        fimpl = self.dtype_u(self.init)
+        uout, Dout = fimpl.f.split()
+        Dout.assign(0.0)
+
         lhs = self.Deqn.mass_term(self.Deqn.trial)
-        #rhs = self.forcing.divu_term(u.f)
-        #prob = LinearVariationalProblem(lhs, rhs, fimpl.f)
-        #solver = LinearVariationalSolver(prob)
-        #solver.solve()
+        rhs = self.forcing.divu_term(u.f)
+        prob = LinearVariationalProblem(lhs, rhs, Dout)
+        solver = LinearVariationalSolver(prob)
+        solver.solve()
 
         return fimpl
 
