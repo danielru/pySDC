@@ -79,7 +79,7 @@ class shallowwater_imex(ptype):
                - inner(w, u_in)
             + phi*D
                - factor*(
-                   inner(grad(phi*D), u)
+                   -phi*D*div(u)
                    )
                - phi*D_in
         )*dx
@@ -154,16 +154,16 @@ class shallowwater_imex(ptype):
 
         self.Deqn.ubar.project(un)
         Dlhs = self.Deqn.mass_term(self.Deqn.trial)
-        Drhs = self.Deqn.advection_term(Dn)
+        Drhs = -self.Deqn.advection_term(Dn)
         Dprob = LinearVariationalProblem(Dlhs, Drhs, Dout)
-        Dsolver = LinearVariationalSolver(Dprob, solver_parameters={'ksp_monitor_true_residual': True})
+        Dsolver = LinearVariationalSolver(Dprob)
         Dsolver.solve()
 
         self.ueqn.ubar.project(un)
         ulhs = self.ueqn.mass_term(self.ueqn.trial)
-        urhs = self.ueqn.advection_term(un)
+        urhs = -self.ueqn.advection_term(un)
         uprob = LinearVariationalProblem(ulhs, urhs, uout)
-        usolver = LinearVariationalSolver(uprob, solver_parameters={'ksp_monitor_true_residual': True})
+        usolver = LinearVariationalSolver(uprob)
         usolver.solve()
         print("MINMAX depth after expl:", Dout.dat.data.min(), Dout.dat.data.max())
 
