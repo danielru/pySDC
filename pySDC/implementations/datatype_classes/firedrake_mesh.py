@@ -18,7 +18,7 @@ class mesh(object):
     # BEWARE: THIS MEANS YOU WILL HAVE TO KEEP THIS IN SYNC WITH WHATEVER YOU GIVE THE CODE IN YOUR PYSDC PARAMETERS
     # !!!111elfelfCAPSLOCK
     R = 6371220
-    ref_level = 3
+    ref_level = 4
     mymesh = IcosahedralSphereMesh(radius=R, refinement_level=ref_level, degree=3)
     # Create GUSTO mesh and state
     ref_level = 3
@@ -28,7 +28,7 @@ class mesh(object):
     x = SpatialCoordinate(mymesh)
     global_normal = x
     mymesh.init_cell_orientations(x)
-    parameters = ShallowWaterParameters()
+    parameters = ShallowWaterParameters(H=8000.)
     output = OutputParameters(dirname=dirname, dumplist_latlon=['D', 'D_error'], steady_state_error_fields=['D', 'u'])
     fieldlist = ['u', 'D']
     state = State(mymesh, horizontal_degree=1,

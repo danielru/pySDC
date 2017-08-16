@@ -3,7 +3,7 @@ from pySDC.core.Problem import ptype
 from pySDC.core.Errors import ParameterError
 from pySDC.implementations.datatype_classes.firedrake_mesh import mesh, rhs_imex_mesh
 
-from firedrake import Function, SpatialCoordinate, LinearVariationalProblem, LinearVariationalSolver, Expression, as_vector
+from firedrake import Function, SpatialCoordinate, LinearVariationalProblem, LinearVariationalSolver, as_vector, cos, sin, FunctionSpace, TestFunctions, inner, div, grad, dx, NonlinearVariationalProblem, NonlinearVariationalSolver, split
 from gusto import *
 
 # noinspection PyUnusedLocal
@@ -38,7 +38,9 @@ class shallowwater_imex(ptype):
 
         #ueqn = VectorInvariant(state, u0.function_space())
         #Deqn = AdvectionEquation(state, D0.function_space(), equation_form="continuity")
+        self.mesh = mesh
         self.Deqn = AdvectionEquation(mesh.state, mesh.state.spaces("DG"))
+        self.ueqn = AdvectionEquation(mesh.state, mesh.state.spaces("HDiv"), vector_manifold=True)
         self.forcing = ShallowWaterForcing(mesh.state)
 
     def solve_system(self, rhs, factor, u0, t):
@@ -56,7 +58,78 @@ class shallowwater_imex(ptype):
         """
 
         me = self.dtype_u(self.init)
-        me.f = rhs.f.copy(deepcopy=True)
+        me.f = u0.f.copy(deepcopy=True)
+        u, D = split(me.f)
+        u_in, D_in = rhs.f.split()
+        print("Doing solve")
+        print("MINMAX depth before solve:", D_in.dat.data.min(), D_in.dat.data.max())
+        u_in, D_in = split(rhs.f)
+
+        state = self.mesh.state
+        W = state.W
+        w, phi = TestFunctions(W)
+        f = state.fields("coriolis")
+        g = state.parameters.g
+
+        eqn = (inner(w, u)
+               - factor*(
+                   - f*inner(w, state.perp(u))
+                   + g*div(w)*D
+               )
+               - inner(w, u_in)
+            + phi*D
+               - factor*(
+                   inner(grad(phi*D), u)
+                   )
+               - phi*D_in
+        )*dx
+
+        params = {'snes_monitor': True,
+                  'pc_type': 'fieldsplit',
+                  'pc_fieldsplit_type': 'schur',
+                  'ksp_type': 'gmres',
+                  'ksp_max_it': 100,
+                  'ksp_gmres_restart': 50,
+                  'pc_fieldsplit_schur_fact_type': 'FULL',
+                  'pc_fieldsplit_schur_precondition': 'selfp',
+                  'fieldsplit_0_ksp_type': 'preonly',
+                  'fieldsplit_0_pc_type': 'bjacobi',
+                  'fieldsplit_0_sub_pc_type': 'ilu',
+                  'fieldsplit_1_ksp_type': 'preonly',
+                  'fieldsplit_1_pc_type': 'gamg',
+                  'fieldsplit_1_mg_levels_ksp_type': 'chebyshev',
+                  'fieldsplit_1_mg_levels_ksp_chebyshev_estimate_eigenvalues': True,
+                  'fieldsplit_1_mg_levels_ksp_chebyshev_estimate_eigenvalues_random': True,
+                  'fieldsplit_1_mg_levels_ksp_max_it': 1,
+                  'fieldsplit_1_mg_levels_pc_type': 'bjacobi',
+                  'fieldsplit_1_mg_levels_sub_pc_type': 'ilu'}
+
+        hyb_params = {
+            'snes_max_it': 50,
+            'snes_atol': 1e-6,
+            'ksp_type': 'preonly',
+            'mat_type': 'matfree',
+            'pc_type': 'python',
+            'pc_python_type': 'firedrake.HybridizationPC',
+            'hybridization': {'ksp_type': 'cg',
+                              'pc_type': 'gamg',
+                              'ksp_rtol': 1e-8,
+                              'mg_levels': {'ksp_type': 'chebyshev',
+                                            'ksp_max_it': 2,
+                                            'pc_type': 'bjacobi',
+                                            'sub_pc_type': 'ilu'},
+                              # Broken residual construction
+                              'hdiv_residual': {'ksp_type': 'cg',
+                                                'pc_type': 'bjacobi',
+                                                'sub_pc_type': 'ilu',
+                                                'ksp_rtol': 1e-8},
+                              # Projection step
+                              'hdiv_projection': {'ksp_type': 'cg',
+                                                  'ksp_rtol': 1e-8}}
+        }
+        prob = NonlinearVariationalProblem(eqn, me.f)
+        solver = NonlinearVariationalSolver(prob, solver_parameters=params)
+        solver.solve()
         return me
 
     def __eval_fexpl(self, u, t):
@@ -72,18 +145,27 @@ class shallowwater_imex(ptype):
         """
 
         un, Dn = u.f.split()
-        print(Dn.dat.data.min(), Dn.dat.data.max())
+        print("MINMAX depth before expl:", Dn.dat.data.min(), Dn.dat.data.max())
 
         fexpl = self.dtype_u(self.init)
         uout, Dout = fexpl.f.split()
         Dout.assign(0.0)
+        uout.assign(as_vector([0., 0.]))
 
         self.Deqn.ubar.project(un)
-        lhs = self.Deqn.mass_term(self.Deqn.trial)
-        rhs = self.Deqn.advection_term(Dn)
-        prob = LinearVariationalProblem(lhs, rhs, Dout)
-        solver = LinearVariationalSolver(prob)
-        solver.solve()
+        Dlhs = self.Deqn.mass_term(self.Deqn.trial)
+        Drhs = self.Deqn.advection_term(Dn)
+        Dprob = LinearVariationalProblem(Dlhs, Drhs, Dout)
+        Dsolver = LinearVariationalSolver(Dprob, solver_parameters={'ksp_monitor_true_residual': True})
+        Dsolver.solve()
+
+        self.ueqn.ubar.project(un)
+        ulhs = self.ueqn.mass_term(self.ueqn.trial)
+        urhs = self.ueqn.advection_term(un)
+        uprob = LinearVariationalProblem(ulhs, urhs, uout)
+        usolver = LinearVariationalSolver(uprob, solver_parameters={'ksp_monitor_true_residual': True})
+        usolver.solve()
+        print("MINMAX depth after expl:", Dout.dat.data.min(), Dout.dat.data.max())
 
         return fexpl
 
@@ -100,17 +182,25 @@ class shallowwater_imex(ptype):
         """
 
         un, Dn = u.f.split()
-        print(Dn.dat.data.min(), Dn.dat.data.max())
+        print("MINMAX depth impl:", Dn.dat.data.min(), Dn.dat.data.max())
 
         fimpl = self.dtype_u(self.init)
+
         uout, Dout = fimpl.f.split()
         Dout.assign(0.0)
 
-        lhs = self.Deqn.mass_term(self.Deqn.trial)
-        rhs = self.forcing.divu_term(u.f)
-        prob = LinearVariationalProblem(lhs, rhs, Dout)
-        solver = LinearVariationalSolver(prob)
-        solver.solve()
+        Dlhs = self.Deqn.mass_term(self.Deqn.trial)
+        Drhs = self.forcing.divu_term(u.f)
+        Dprob = LinearVariationalProblem(Dlhs, Drhs, Dout)
+        Dsolver = LinearVariationalSolver(Dprob)
+        Dsolver.solve()
+
+        ulhs = self.ueqn.mass_term(self.ueqn.trial)
+        urhs = self.forcing.pressure_gradient_term(u.f) + self.forcing.coriolis_term(u.f)
+        uprob = LinearVariationalProblem(ulhs, urhs, uout)
+        usolver = LinearVariationalSolver(uprob)
+        usolver.solve()
+        print("MINMAX depth after impl:", Dout.dat.data.min(), Dout.dat.data.max())
 
         return fimpl
 
@@ -144,20 +234,47 @@ class shallowwater_imex(ptype):
 
 
         # interpolate initial conditions
-        u0 = mesh.state.fields("u")
-        D0 = mesh.state.fields("D")
-        x = SpatialCoordinate(mesh.state.mesh)
-        u_max = 2*np.pi*mesh.R/(12*mesh.day)  # Maximum amplitude of the zonal wind (m/s)
-        uexpr = as_vector([-u_max*x[1]/mesh.R, u_max*x[0]/mesh.R, 0.0])
-        Omega = mesh.state.parameters.Omega
-        g = mesh.state.parameters.g
-        Dexpr = Expression("R*acos(fmin(((x[0]*x0 + x[1]*x1 + x[2]*x2)/(R*R)), 1.0)) < rc ? (h0/2.0)*(1 + cos(pi*R*acos(fmin(((x[0]*x0 + x[1]*x1 + x[2]*x2)/(R*R)), 1.0))/rc)) : 0.0", R=mesh.R, rc=mesh.R/3., h0=1000., x0=0.0, x1=-mesh.R, x2=0.0)
+        state = mesh.state
+        mymesh = mesh.state.mesh
+        R = mesh.R
+        u0 = state.fields("u")
+        D0 = state.fields("D")
+        omega = 7.848e-6  # note lower-case, not the same as Omega
+        K = 7.848e-6
+        g = state.parameters.g
+        Omega = state.parameters.Omega
+        H = state.parameters.H
+        x = SpatialCoordinate(mymesh)
 
-        u0.project(uexpr)
+        theta, lamda = latlon_coords(mymesh)
+
+        u_zonal = R*omega*cos(theta) + R*K*(cos(theta)**3)*(4*sin(theta)**2 - cos(theta)**2)*cos(4*lamda)
+        u_merid = -R*K*4*(cos(theta)**3)*sin(theta)*sin(4*lamda)
+
+        uexpr = sphere_to_cartesian(mymesh, u_zonal, u_merid)
+
+        def Atheta(theta):
+            return 0.5*omega*(2*Omega + omega)*cos(theta)**2 + 0.25*(K**2)*(cos(theta)**8)*(5*cos(theta)**2 + 26 - 32/(cos(theta)**2))
+
+        def Btheta(theta):
+            return (2*(Omega + omega)*K/30)*(cos(theta)**4)*(26 - 25*cos(theta)**2)
+
+        def Ctheta(theta):
+            return 0.25*(K**2)*(cos(theta)**8)*(5*cos(theta)**2 - 6)
+
+        Dexpr = H + (R**2)*(Atheta(theta) + Btheta(theta)*cos(4*lamda) + Ctheta(theta)*cos(8*lamda))/g
+
+        # Coriolis
+        fexpr = 2*Omega*x[2]/R
+        V = FunctionSpace(mymesh, "CG", 1)
+        f = state.fields("coriolis", V)
+        f.interpolate(fexpr)  # Coriolis frequency (1/s)
+
+        u0.project(uexpr, form_compiler_parameters={'quadrature_degree': 8})
         D0.interpolate(Dexpr)
 
-        mesh.state.initialise([('u', u0), ('D', D0)])
+        state.initialise([('u', u0), ('D', D0)])
 
         me = self.dtype_u(self.init)
-        me.f = mesh.state.xn
+        me.f = state.xn
         return me
