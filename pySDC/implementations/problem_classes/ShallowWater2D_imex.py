@@ -59,7 +59,7 @@ class shallowwater_imex(ptype):
         #ueqn = VectorInvariant(state, u0.function_space())
         #Deqn = AdvectionEquation(state, D0.function_space(), equation_form="continuity")
         self.Deqn = AdvectionEquation(self.state, self.state.spaces("DG"))
-
+        self.forcing = ShallowWaterForcing(state)
 
     def solve_system(self, rhs, factor, u0, t):
         """
@@ -121,6 +121,12 @@ class shallowwater_imex(ptype):
 
         fimpl = self.dtype_u(self.init, val=0)
         fimpl.f.assign(0.0)
+        lhs = self.Deqn.mass_term(self.Deqn.trial)
+        rhs = self.forcing.divu_term(u.f)
+        prob = LinearVariationalProblem(lhs, rhs, fimpl.f)
+        solver = LinearVariationalSolver(prob)
+        solver.solve()
+
         return fimpl
 
     def eval_f(self, u, t):
