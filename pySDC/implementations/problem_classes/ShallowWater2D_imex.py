@@ -143,7 +143,7 @@ class shallowwater_imex(ptype):
         # interpolate initial conditions
         u0 = mesh.state.fields("u")
         D0 = mesh.state.fields("D")
-        x = SpatialCoordinate(self.state.mesh)
+        x = SpatialCoordinate(mesh.state.mesh)
         u_max = 2*np.pi*mesh.R/(12*mesh.day)  # Maximum amplitude of the zonal wind (m/s)
         uexpr = as_vector([-u_max*x[1]/mesh.R, u_max*x[0]/mesh.R, 0.0])
         Omega = mesh.state.parameters.Omega
@@ -153,8 +153,8 @@ class shallowwater_imex(ptype):
         u0.project(uexpr)
         D0.interpolate(Dexpr)
 
-        mesh.state.initialise([('u', u0),
+        mesh.state.initialise([('u', u0), ('D', D0)])
 
         me = self.dtype_u(self.init)
-        me.f = D0
+        me.f = mesh.state.xn
         return me

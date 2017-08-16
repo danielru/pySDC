@@ -20,25 +20,24 @@ class mesh(object):
     R = 6371220
     ref_level = 3
     mymesh = IcosahedralSphereMesh(radius=R, refinement_level=ref_level, degree=3)
-    myfunctionspace = FunctionSpace(mesh.mymesh, "DG", 1)
-
     # Create GUSTO mesh and state
     ref_level = 3
     dirname = "sw_W2_ref%s" % (ref_level)
     R = 6371220. # in metres
     day = 86400.
-    x = SpatialCoordinate(mesh.mymesh)
+    x = SpatialCoordinate(mymesh)
     global_normal = x
-    mesh.mymesh.init_cell_orientations(x)
+    mymesh.init_cell_orientations(x)
     parameters = ShallowWaterParameters()
     output = OutputParameters(dirname=dirname, dumplist_latlon=['D', 'D_error'], steady_state_error_fields=['D', 'u'])
     fieldlist = ['u', 'D']
-    state = State(mesh.mymesh, horizontal_degree=1,
+    state = State(mymesh, horizontal_degree=1,
                            family="BDM",
                            output=output,
                            parameters=parameters,
                            diagnostics=diagnostics,
                            fieldlist=fieldlist)       
+
 
     def __init__(self, init=None, val=None):
         """
@@ -62,8 +61,8 @@ class mesh(object):
 
             ### FIXME: for now, we assume that the mesh and function space is always the same and hard-code it here. Bad code! ###
             assert isinstance(init, int), NotImplementedError("Cannot yet use firedrake mesh init routine with tupel sized data")
-            self.f = Function(mesh.myfunctionspace)
-            self.f.interpolate(Expression("x[0] = a", a=val))
+            self.f = Function(mesh.state.W)
+            #self.f.interpolate(Expression("x[0] = a", a=val))
 
         # something is wrong, if none of the ones above hit
         else:
