@@ -11,4 +11,5 @@ class dump_solution(hooks):
     def post_step(self, step, level_number):
       super(dump_solution, self).post_step(step, level_number)
       L = step.levels[level_number]
-      self.output.write(L.uend.f)
+      u, D = L.uend.f.split()
+      self.output.write(u, D)
